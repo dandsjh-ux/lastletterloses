@@ -1,0 +1,13 @@
+# Render Blueprint: New > Blueprint > pick this repo (or create a Web Service by hand with the same settings).
+services:
+  - type: web
+    name: last-letter-loses
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22

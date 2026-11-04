@@ -1,0 +1,15 @@
+{
+  "name": "last-letter-loses",
+  "version": "1.0.0",
+  "description": "Last Letter Loses - a word-chain bomb game for the classroom (same computer or online, up to 6 players per room).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "python3 tools/build.py",
+    "test": "node test/engine.test.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "ws": "^8.18.0" },
+  "license": "UNLICENSED",
+  "private": true
+}
