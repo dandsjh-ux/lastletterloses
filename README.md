@@ -26,9 +26,7 @@ a heart. Last player standing wins.
 | 🤏 Shrink | 12 | your next word's letters are 40 % thinner |
 | ✨ Double Points | 15 | your next word scores ×2 |
 | 😈 Jinx | 22 | the next player's letters are 40 % wider |
-| 📏 Extend | 26 | +10 spaces on the bar for the round |
-| 🛡️ Shield | 40 | blocks the next explosion |
-| 💖 Extra Heart | 60 | win back a lost heart |
+| 📏 Extend | 26 | +10 spaces on the bar for the round — **only one can be bought per round** (first buyer gets it) |
 | 🔄 Swap | 90 | pass your turn to the next player |
 
 ## Run it

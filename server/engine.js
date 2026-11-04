@@ -30,7 +30,7 @@ class Room{
     this.clearTimers();
     this.used=R.makeUsed(this.cand);
     this.cur=0; this.round=1; this.cells=36; this.chainLen=0; this.barX=0; this.letters=[]; this.lastLetter=null;
-    this.deadline=null; this.turnTimer=null; this.shopEnd=null; this.pendingOverride=null; this.first=true;
+    this.deadline=null; this.turnTimer=null; this.shopEnd=null; this.shopSold={}; this.pendingOverride=null; this.first=true;
   }
   after(ms,fn){ const t=setTimeout(()=>{ this.timers.delete(t); try{ fn(); }catch(e){ console.error('room timer error',e); } },ms); this.timers.add(t); return t; }
   clearTimers(){ this.timers.forEach(clearTimeout); this.timers.clear(); if(this.turnTimer){ clearTimeout(this.turnTimer); this.turnTimer=null; } }
@@ -52,7 +52,7 @@ class Room{
   snapshot(){
     return {t:'state',code:this.code,phase:this.phase,players:this.pubPlayers(),S:this.S,hostId:(this.host()||{}).id||null,watchers:this.watchers(),
       cur:this.cur,round:this.round,cells:this.cells,lastLetter:this.lastLetter,barX:this.barX,letters:this.letters,used:this.used.list,
-      ms:this.turnMs(),timed:!!this.deadline,shopMs:this.shopEnd?Math.max(0,this.shopEnd-Date.now()):0,nextCells:R.cellsForRound(this.S,this.round)};
+      sold:this.shopSold,ms:this.turnMs(),timed:!!this.deadline,shopMs:this.shopEnd?Math.max(0,this.shopEnd-Date.now()):0,nextCells:R.cellsForRound(this.S,this.round)};
   }
   sendLobbyToAll(){ this.broadcast(this.lobbyMsg()); }
 
@@ -105,7 +105,7 @@ class Room{
     if(this.connectedCount()===0) this.emptySince=Date.now();
     this.onDisconnectedDuringGame(m);
   }
-  broadcastPlayers(){ this.broadcast({t:'players',players:this.pubPlayers(),hostId:(this.host()||{}).id||null,watchers:this.watchers()}); }
+  broadcastPlayers(){ this.broadcast({t:'players',sold:this.shopSold,players:this.pubPlayers(),hostId:(this.host()||{}).id||null,watchers:this.watchers()}); }
   reassignHost(){
     let next=null;
     this.members.forEach(m=>{ if(!next&&m.connected&&m.token!==this.hostToken&&m.seat>=0) next=m; });
@@ -282,10 +282,9 @@ class Room{
   doBoom(pi,reason){
     if(this.phase==='boom'||this.phase==='shop'||this.phase==='over') return;
     this.stopTurnClock(); this.phase='boom'; this.pendingOverride=null;
-    const p=this.players[pi]; let shielded=false;
-    if((p.inv.shield||0)>0){ p.inv.shield--; shielded=true; }
-    else { p.lives=Math.max(0,p.lives-1); p.pts+=R.PITY; }
-    this.broadcast({t:'boom',pi:pi,reason:reason,shielded:shielded,lives:p.lives,players:this.pubPlayers()});
+    const p=this.players[pi];
+    p.lives=Math.max(0,p.lives-1); p.pts+=R.PITY;
+    this.broadcast({t:'boom',pi:pi,reason:reason,lives:p.lives,players:this.pubPlayers()});
     this.after(2400,()=>this.afterBoom(pi));
   }
   afterBoom(pi){
@@ -311,19 +310,19 @@ class Room{
 
   /* ---------- shop ---------- */
   openShop(){
-    this.phase='shop'; this.players.forEach(p=>{ p.ready=false; });
+    this.phase='shop'; this.shopSold={}; this.players.forEach(p=>{ p.ready=false; });
     this.shopEnd=Date.now()+R.SHOP_SECONDS*1000;
-    this.broadcast({t:'shop',round:this.round,nextCells:R.cellsForRound(this.S,this.round),players:this.pubPlayers(),ms:R.SHOP_SECONDS*1000});
+    this.broadcast({t:'shop',round:this.round,nextCells:R.cellsForRound(this.S,this.round),players:this.pubPlayers(),sold:this.shopSold,ms:R.SHOP_SECONDS*1000});
     this.shopTimer=this.after(R.SHOP_SECONDS*1000,()=>this.closeShop());
   }
   buy(m,id){
     if(this.phase!=='shop') return;
     const p=this.playerOf(m); const it=R.ITEM[id]; if(!p||!it||!p.alive) return;
-    if(!R.canBuy(this.S,p,it).ok){ this.send(m,{t:'players',players:this.pubPlayers()}); return; }
+    if(!R.canBuy(this.S,p,it,this.shopSold).ok){ this.send(m,{t:'players',players:this.pubPlayers(),sold:this.shopSold}); return; }
     p.pts-=it.price;
-    if(id==='heart') p.lives=Math.min(p.max,p.lives+1); else p.inv[id]=(p.inv[id]||0)+1;
+    p.inv[id]=(p.inv[id]||0)+1; if(it.oncePerRound) this.shopSold[id]=true;
     p.ready=false;
-    this.broadcast({t:'players',players:this.pubPlayers(),bought:{pi:m.seat,id:id}});
+    this.broadcast({t:'players',players:this.pubPlayers(),sold:this.shopSold,bought:{pi:m.seat,id:id}});
   }
   ready(m,force){
     if(this.phase!=='shop') return;

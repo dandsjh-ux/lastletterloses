@@ -138,9 +138,7 @@ const ITEMS=[
  {id:'shrink',icon:'🤏',name:'Shrink',       kind:'arm',    price:12, max:3,desc:'Your next word is written in skinny letters that take up 40% less space.'},
  {id:'double',icon:'✨',name:'Double Points',kind:'arm',    price:15, max:2,desc:'Your next word scores twice as many points.'},
  {id:'jinx',  icon:'😈',name:'Jinx',         kind:'arm',    price:22, max:2,desc:'The next player’s letters are extra wide (40% more space).'},
- {id:'extend',icon:'📏',name:'Extend',       kind:'now',    price:26, max:2,desc:'Add 10 more spaces to the bar for the rest of the round.'},
- {id:'shield',icon:'🛡️',name:'Shield',       kind:'passive',price:40, max:1,desc:'Blocks the next explosion that would cost you a heart.'},
- {id:'heart', icon:'💖',name:'Extra Heart',  kind:'heal',   price:60, max:0,desc:'Win back one lost heart.'},
+ {id:'extend',icon:'📏',name:'Extend',       kind:'now',    price:26, max:1,oncePerRound:true,desc:'Add 10 more spaces to the bar for the rest of the round. Only one can be bought per round!'},
  {id:'swap',  icon:'🔄',name:'Swap',         kind:'now',    price:90, max:1,desc:'Pass the bomb: your turn goes to the next player. Very powerful!'}
 ];
 const ITEM={}; ITEMS.forEach(i=>ITEM[i.id]=i);
@@ -148,8 +146,8 @@ const ITEM={}; ITEMS.forEach(i=>ITEM[i.id]=i);
 function wordPoints(n){ return n<3?1:Math.pow(2,Math.min(n,14)-3); }
 function awardFor(S,n,dbl){ return Math.max(1,Math.round(wordPoints(n)*(dbl?2:1)*S.pts)); }
 function turnScale(jinxed,shrunk){ return (jinxed?JINX_W:1)*(shrunk?SHRINK_W:1); }
-function canBuy(S,p,it){
-  if(it.kind==='heal') return p.lives>=p.max?{ok:false,why:'Hearts full'}:p.pts<it.price?{ok:false,why:'Need ⭐ '+(it.price-p.pts)+' more'}:{ok:true};
+function canBuy(S,p,it,sold){
+  if(it.oncePerRound&&sold&&sold[it.id]) return {ok:false,why:'Sold out this round'};
   if(it.needsTimer&&!S.timer) return {ok:false,why:'Timer is off'};
   if((p.inv[it.id]||0)>=it.max) return {ok:false,why:'Max held'};
   if(p.pts<it.price) return {ok:false,why:'Need ⭐ '+(it.price-p.pts)+' more'};
