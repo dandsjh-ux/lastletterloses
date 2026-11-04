@@ -746,7 +746,7 @@ const ViewDOM=(function(){
    Game state
    ===================================================================== */
 let View=null, ready=false;
-const G={phase:'setup',players:[],cur:0,round:1,cells:36,chainLen:0,barX:0,letters:[],armed:{},lastLetter:null,timeLeft:0,timed:false,paused:false,adding:null,justLost:null,lowSec:-1,shopSold:{}};
+const G={phase:'setup',players:[],cur:0,round:1,cells:36,chainLen:0,barX:0,letters:[],armed:{},lastLetter:null,timeLeft:0,timed:false,paused:false,adding:null,justLost:null,lowSec:-1};
 /* online (multiplayer) state; NET.on = we are inside a room */
 const NET={on:false,ws:null,code:null,token:null,id:null,hostId:null,me:-1,isHost:false,watchers:0,name:'',color:'',spectate:false,left:false,retry:0,rt:null,Sbak:null,shopEnd:0,pendingGood:false,ovModal:null,err:'',busy:false,connecting:false};
 let setupMode='local';
@@ -911,16 +911,16 @@ function usePower(id){
 }
 
 const SHOP={sel:0};
-function canBuy(p,it){ return R.canBuy(S,p,it,G.shopSold); }
+function canBuy(p,it){ return R.canBuy(S,p,it); }
 function buy(pi,id){
   if(NET.on){ netSend({t:'buy',id:id}); return true; }
   const p=G.players[pi], it=ITEM[id]; if(!p||!it||!p.alive||!canBuy(p,it).ok) return false;
   p.pts-=it.price;
-  p.inv[id]=(p.inv[id]||0)+1; if(it.oncePerRound){ G.shopSold=G.shopSold||{}; G.shopSold[id]=true; }
+  p.inv[id]=(p.inv[id]||0)+1;
   Snd.coin(); renderChips(); renderShop(); return true;
 }
 function openShop(){
-  G.phase='shop'; G.shopSold={}; setInputEnabled(false); View.setCursor(false); renderTray(); renderChips(); showMsg('');
+  G.phase='shop'; setInputEnabled(false); View.setCursor(false); renderTray(); renderChips(); showMsg('');
   SHOP.sel=G.cur;
   const old=$('#shop'); if(old) old.remove();
   const o=document.createElement('div'); o.id='shop'; document.body.appendChild(o);
@@ -946,7 +946,7 @@ function renderShop(){
     h+='<div class="sgrid">';
     ITEMS.forEach(it=>{
       const c=canBuy(sp,it);
-      const own=it.oncePerRound?(G.shopSold&&G.shopSold[it.id]?'Sold out this round':'1 per round · Holding '+(sp.inv[it.id]||0)):'Holding '+(sp.inv[it.id]||0)+' / '+it.max;
+      const own='Holding '+(sp.inv[it.id]||0)+' / '+it.max;
       h+='<div class="item'+(c.ok?'':' no')+'"><div class="pr">⭐ '+it.price+'</div><div class="ic">'+it.icon+'</div><div class="nm">'+it.name+'</div><div class="ds">'+it.desc+'</div><div class="own">'+own+'</div><button class="btn small buy" data-id="'+it.id+'"'+(c.ok?'':' disabled')+'>'+(c.ok?'Buy':c.why)+'</button></div>';
     });
     h+='</div>';
@@ -1306,7 +1306,6 @@ function netHandle(m){
       break;
     case 'state': netState(m); break;
     case 'players':
-      if(m.sold) G.shopSold=m.sold;
       applyPlayers(m.players); if(m.hostId!==undefined){ NET.hostId=m.hostId; NET.isHost=NET.id===m.hostId; } NET.watchers=m.watchers||0;
       if(m.bought&&m.bought.pi===NET.me) Snd.coin();
       if(G.phase==='setup'){ renderOnline(); renderSettings(); } else { renderChips(); renderTray(); if($('#shop')) renderShop(); }
@@ -1318,7 +1317,7 @@ function netHandle(m){
     case 'boom': netBoom(m); break;
     case 'out': flushAdding(); applyPlayers(m.players); renderChips(); toast(esc(G.players[m.pi].name)+' is out!','',1700); break;
     case 'pu': netPower(m); break;
-    case 'shop': G.shopSold=m.sold||{}; netShop(m); break;
+    case 'shop': netShop(m); break;
     case 'over': netOver(m); break;
     case 'reject': Snd.bad(); { const w=$('#word'); w.classList.remove('shake'); void w.offsetWidth; w.classList.add('shake'); } showMsg(m.msg,m.canOverride); break;
     case 'info': showMsg(m.msg); break;
@@ -1344,7 +1343,7 @@ function netState(m){
   (m.letters||[]).forEach(l=>{ View.addLetter(l.ch,l.x0,l.color,l.cw); G.letters.push(l); G.barX=l.x0+l.cw; G.chainLen++; });
   renderTop(); renderChips();
   if(m.phase==='turn') netTurn({cur:m.cur,ms:m.ms,lastLetter:m.lastLetter,quiet:true});
-  else if(m.phase==='shop'){ G.shopSold=m.sold||{}; netShop({round:m.round,nextCells:m.nextCells,ms:m.shopMs,quiet:true}); }
+  else if(m.phase==='shop') netShop({round:m.round,nextCells:m.nextCells,ms:m.shopMs,quiet:true});
   else if(m.phase==='over') netOver({winner:G.players.findIndex(p=>p.alive),round:m.round});
   else { G.phase='between'; setInputEnabled(false); setPrompt(); renderTray(); }
 }
