@@ -453,12 +453,12 @@ function decodeFrontCoded(text){
 }
 
 /* ---------- points & power-ups ---------- */
-const SHRINK_W=0.6, JINX_W=1.4, PITY=8, EXTEND_BY=10, TIME_BY=10, SHOP_SECONDS=90;
+const SHRINK_W=0.5, JINX_W=2, PITY=8, EXTEND_BY=10, TIME_BY=10, SHOP_SECONDS=90;
 const ITEMS=[
  {id:'time',  icon:'⏱️',name:'Extra Time',   kind:'now',    price:8,  max:3,desc:'+10 seconds on the clock for your turn.',needsTimer:true},
- {id:'shrink',icon:'🤏',name:'Shrink',       kind:'arm',    price:12, max:3,desc:'Your next word is written in skinny letters that take up 40% less space.'},
+ {id:'shrink',icon:'🤏',name:'Shrink',       kind:'arm',    price:12, max:3,desc:'Your next word is written in skinny letters that take up half the normal space.'},
  {id:'double',icon:'✨',name:'Double Points',kind:'arm',    price:15, max:2,desc:'Your next word scores twice as many points.'},
- {id:'jinx',  icon:'😈',name:'Jinx',         kind:'arm',    price:22, max:2,desc:'The next player’s letters are extra wide (40% more space).'},
+ {id:'jinx',  icon:'😈',name:'Jinx',         kind:'arm',    price:22, max:2,desc:'The next player’s letters are double width (they take up twice the space).'},
  {id:'extend',icon:'📏',name:'Extend',       kind:'now',    price:26, max:1,desc:'Add 10 more spaces to the bar for the rest of the round. Limit one per player per round.'},
  {id:'swap',  icon:'🔄',name:'Swap',         kind:'now',    price:90, max:1,desc:'Pass the bomb: your turn goes to the next player. Very powerful!'}
 ];

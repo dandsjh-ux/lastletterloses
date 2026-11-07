@@ -23,9 +23,9 @@ a heart. Last player standing wins.
 | Power-up | Price | Effect |
 |---|---|---|
 | ⏱️ Extra Time | 8 | +10 s on your turn clock |
-| 🤏 Shrink | 12 | your next word's letters are 40 % thinner |
+| 🤏 Shrink | 12 | your next word's letters take up half the space |
 | ✨ Double Points | 15 | your next word scores ×2 |
-| 😈 Jinx | 22 | the next player's letters are 40 % wider |
+| 😈 Jinx | 22 | the next player's letters take up double the space |
 | 📏 Extend | 26 | +10 spaces on the bar for the round — each player can buy **one per round** |
 | 🔄 Swap | 90 | pass your turn to the next player |
 
